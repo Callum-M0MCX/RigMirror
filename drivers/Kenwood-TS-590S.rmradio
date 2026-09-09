@@ -1,0 +1,284 @@
+{
+  "format": "RigMirror Radio Driver",
+  "schema_version": 1,
+  "metadata": {
+    "manufacturer": "Kenwood",
+    "model": "TS-590S",
+    "display_name": "Kenwood TS-590S",
+    "driver_revision": 3,
+    "contributor_name": "Callum",
+    "contributor_callsign": "M0MCX",
+    "notes": "v0.3.002 candidate. TEST DRIVER is optional and its result is tied to this exact file.",
+    "release_channel": "CANDIDATE"
+  },
+  "topology": {
+    "type": "active_vfo"
+  },
+  "transport": {
+    "protocol": "semicolon_ascii",
+    "encoding": "ascii",
+    "terminator": ";",
+    "default_baud": 57600,
+    "supported_baud": [
+      4800,
+      9600,
+      19200,
+      38400,
+      57600,
+      115200
+    ],
+    "data_bits": 8,
+    "parity": "N",
+    "stop_bits": 1,
+    "timeout_seconds": 0.8,
+    "initialise_commands": [
+      "AI0;"
+    ],
+    "shutdown_commands": [
+      "AI0;"
+    ]
+  },
+  "capabilities": {
+    "identify": {
+      "label": "Identify radio",
+      "kind": "query",
+      "command": "ID;",
+      "response_equals": "ID021;",
+      "extract": {
+        "type": "constant",
+        "value": "Kenwood TS-590S"
+      },
+      "instructions": "Reads the radio identity. Expected reply: ID023;",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "active_vfo": {
+      "label": "Read active VFO",
+      "kind": "query",
+      "command": "FR;",
+      "response_regex": "^FR(?P<value>[012]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "0": "VFO A",
+          "1": "VFO B",
+          "2": "MEMORY"
+        }
+      },
+      "instructions": "VFO A and VFO B are supported. MEMORY is readable but RigMirror will refuse to mirror it.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "frequency_read": {
+      "label": "Read frequency",
+      "kind": "query",
+      "selector": "active_vfo",
+      "command_by_selector": {
+        "VFO A": "FA;",
+        "VFO B": "FB;"
+      },
+      "response_regex": "^F[AB](?P<value>\\d{11});$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "decode": "integer"
+      },
+      "instructions": "Reads whichever VFO is currently active.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "frequency_write": {
+      "label": "Write frequency",
+      "kind": "set",
+      "selector": "active_vfo",
+      "command_by_selector": {
+        "VFO A": "FA{value:011d};",
+        "VFO B": "FB{value:011d};"
+      },
+      "input": {
+        "type": "integer",
+        "minimum": 30000,
+        "maximum": 60000000
+      },
+      "verify_capability": "frequency_read",
+      "changes_radio": true,
+      "instructions": "Enter frequency in Hz, for example 7138000. The active VFO will change.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "mode_read": {
+      "label": "Read operating mode",
+      "kind": "query",
+      "command": "MD;",
+      "response_regex": "^MD(?P<value>[1-79]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "1": "LSB",
+          "2": "USB",
+          "3": "CW",
+          "4": "FM",
+          "5": "AM",
+          "6": "FSK",
+          "7": "CW-R",
+          "9": "FSK-R"
+        }
+      },
+      "instructions": "Reads the operating mode.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "mode_write": {
+      "label": "Write operating mode",
+      "kind": "set",
+      "command": "MD{value};",
+      "input": {
+        "type": "mapped_choice",
+        "map": {
+          "LSB": "1",
+          "USB": "2",
+          "CW": "3",
+          "FM": "4",
+          "AM": "5",
+          "FSK": "6",
+          "CW-R": "7",
+          "FSK-R": "9"
+        }
+      },
+      "verify_capability": "mode_read",
+      "changes_radio": true,
+      "instructions": "Enter a mode name, such as USB or CW.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "tx_state": {
+      "label": "Read RX/TX state",
+      "kind": "query",
+      "command": "IF;",
+      "response_regex": "^IF.{26}[01].*;$",
+      "extract": {
+        "type": "character",
+        "index": 28,
+        "map": {
+          "0": "RX",
+          "1": "TX"
+        }
+      },
+      "instructions": "Reads P8 in the IF response. This function never keys the transmitter.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "antenna_read": {
+      "label": "Read antenna state",
+      "kind": "query",
+      "command": "AN;",
+      "response_regex": "^AN(?P<value>[12][01][01]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value"
+      },
+      "instructions": "Three digits represent ANT connector, RX ANT status and Drive Out status.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "antenna_select": {
+      "label": "Select receive source",
+      "kind": "choice_set",
+      "choices": {
+        "ANT1": [
+          "AN199;",
+          "AN909;"
+        ],
+        "ANT2": [
+          "AN299;",
+          "AN909;"
+        ],
+        "RX ANT": [
+          "AN919;"
+        ]
+      },
+      "verify_capability": "antenna_read",
+      "changes_radio": true,
+      "instructions": "Choose ANT1, ANT2 or RX ANT. This changes the radio's receive routing.",
+      "verification": {
+        "status": "REFERENCE"
+      }
+    },
+    "transmit_vfo": {
+      "kind": "query",
+      "command": "FT;",
+      "response_regex": "FT(?P<value>[01]);",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "0": "VFO A",
+          "1": "VFO B"
+        }
+      },
+      "label": "Transmit vfo"
+    },
+    "tx_frequency_read": {
+      "kind": "query",
+      "selector": "transmit_vfo",
+      "command_by_selector": {
+        "VFO A": "FA;",
+        "VFO B": "FB;"
+      },
+      "response_regex": "F[AB](?P<value>\\d{11});",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "decode": "integer"
+      },
+      "label": "Tx frequency read"
+    },
+    "tx_frequency_write": {
+      "kind": "set",
+      "selector": "transmit_vfo",
+      "command_by_selector": {
+        "VFO A": "FA{value:011d};",
+        "VFO B": "FB{value:011d};"
+      },
+      "input": {
+        "type": "integer",
+        "minimum": 30000,
+        "maximum": 60000000
+      },
+      "label": "Tx frequency write"
+    },
+    "transmit_vfo_write": {
+      "kind": "set",
+      "command": "FT{value};",
+      "input": {
+        "type": "mapped_choice",
+        "map": {
+          "VFO A": "0",
+          "VFO B": "1"
+        }
+      },
+      "label": "Transmit vfo write"
+    }
+  },
+  "revision_history": [
+    {
+      "revision": 1,
+      "contributor": "Callum M0MCX",
+      "note": "Initial known-good TS-590SG laboratory profile."
+    },
+    {
+      "revision": 3,
+      "note": "v0.3.002: physical 6 m range and pre-PTT M transmit-VFO preparation."
+    }
+  ]
+}

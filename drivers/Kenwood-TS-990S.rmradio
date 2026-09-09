@@ -1,0 +1,231 @@
+{
+  "format": "RigMirror Radio Driver",
+  "schema_version": 1,
+  "metadata": {
+    "manufacturer": "Kenwood",
+    "model": "TS-990S",
+    "display_name": "Kenwood TS-990S",
+    "driver_revision": 3,
+    "contributor_name": "Callum",
+    "contributor_callsign": "M0MCX",
+    "notes": "v0.3.002 candidate. TEST DRIVER is optional and its result is tied to this exact file.",
+    "release_channel": "CANDIDATE"
+  },
+  "topology": {
+    "type": "dual_receiver",
+    "receivers": [
+      "MAIN",
+      "SUB"
+    ],
+    "default_receiver": "MAIN"
+  },
+  "transport": {
+    "protocol": "semicolon_ascii",
+    "encoding": "ascii",
+    "terminator": ";",
+    "default_baud": 115200,
+    "supported_baud": [
+      4800,
+      9600,
+      19200,
+      38400,
+      57600,
+      115200
+    ],
+    "data_bits": 8,
+    "parity": "N",
+    "stop_bits": 1,
+    "timeout_seconds": 0.8,
+    "initialise_commands": [
+      "AI2;"
+    ],
+    "shutdown_commands": [
+      "AI0;"
+    ]
+  },
+  "events": {
+    "transmit": "^TX[0-2];$",
+    "receive": "^RX;$"
+  },
+  "capabilities": {
+    "identify": {
+      "label": "Identify radio",
+      "kind": "query",
+      "command": "ID;",
+      "response_equals": "ID022;",
+      "extract": {
+        "type": "constant",
+        "value": "Kenwood TS-990S"
+      }
+    },
+    "frequency_read": {
+      "label": "Read receiver frequency",
+      "kind": "query",
+      "selector": "receiver",
+      "command_by_selector": {
+        "MAIN": "FA;",
+        "SUB": "FB;"
+      },
+      "response_regex": "^F[AB](?P<value>\\d{11});$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "decode": "integer"
+      }
+    },
+    "frequency_write": {
+      "label": "Write receiver frequency",
+      "kind": "set",
+      "selector": "receiver",
+      "command_by_selector": {
+        "MAIN": "FA{value:011d};",
+        "SUB": "FB{value:011d};"
+      },
+      "input": {
+        "type": "integer",
+        "minimum": 30000,
+        "maximum": 60000000
+      },
+      "changes_radio": true
+    },
+    "mode_read": {
+      "label": "Read receiver mode",
+      "kind": "query",
+      "selector": "receiver",
+      "command_by_selector": {
+        "MAIN": "OM0;",
+        "SUB": "OM1;"
+      },
+      "response_regex": "^OM[01](?P<value>[1-9A-N]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "1": "LSB",
+          "2": "USB",
+          "3": "CW",
+          "4": "FM",
+          "5": "AM",
+          "6": "FSK",
+          "7": "CW-R",
+          "9": "FSK-R",
+          "A": "USB",
+          "B": "USB",
+          "C": "LSB",
+          "D": "USB",
+          "E": "FM",
+          "F": "AM",
+          "G": "LSB",
+          "H": "USB",
+          "I": "FM",
+          "J": "AM",
+          "K": "LSB",
+          "L": "USB",
+          "M": "FM",
+          "N": "AM"
+        }
+      }
+    },
+    "mode_write": {
+      "label": "Write receiver mode",
+      "kind": "set",
+      "selector": "receiver",
+      "command_by_selector": {
+        "MAIN": "OM0{value};",
+        "SUB": "OM1{value};"
+      },
+      "input": {
+        "type": "mapped_choice",
+        "map": {
+          "LSB": "1",
+          "USB": "2",
+          "CW": "3",
+          "FM": "4",
+          "AM": "5",
+          "FSK": "6",
+          "CW-R": "7",
+          "FSK-R": "9"
+        }
+      },
+      "preserve_context": {
+        "query_command": "CB;",
+        "response_regex": "^CB(?P<value>[01]);$",
+        "group": "value",
+        "target_by_selector": {
+          "MAIN": "0",
+          "SUB": "1"
+        },
+        "select_command": "CB{value};",
+        "restore_command": "CB{value};"
+      },
+      "changes_radio": true
+    },
+    "antenna_read": {
+      "label": "Read receiver antenna state",
+      "kind": "query",
+      "selector": "receiver",
+      "command_by_selector": {
+        "MAIN": "AN00;",
+        "SUB": "AN01;"
+      },
+      "response_regex": "^AN0[01](?P<value>[1-4][01][0-9]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value"
+      }
+    },
+    "antenna_select": {
+      "label": "Select receiver source",
+      "kind": "choice_set",
+      "selector": "receiver",
+      "choices_by_selector": {
+        "MAIN": {
+          "ANT1": [
+            "AN00109;"
+          ],
+          "ANT2": [
+            "AN00209;"
+          ],
+          "ANT3": [
+            "AN00309;"
+          ],
+          "ANT4": [
+            "AN00409;"
+          ],
+          "RX ANT": [
+            "AN00919;"
+          ]
+        },
+        "SUB": {
+          "ANT1": [
+            "AN01109;"
+          ],
+          "ANT2": [
+            "AN01209;"
+          ],
+          "ANT3": [
+            "AN01309;"
+          ],
+          "ANT4": [
+            "AN01409;"
+          ],
+          "RX ANT": [
+            "AN01919;"
+          ]
+        }
+      },
+      "changes_radio": true
+    }
+  },
+  "revision_history": [
+    {
+      "revision": 1,
+      "contributor": "Callum M0MCX",
+      "note": "Initial TS-990S dual-receiver outboard driver."
+    },
+    {
+      "revision": 3,
+      "note": "v0.3.002: physical 6 m range and pre-PTT M transmit-VFO preparation."
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "format": "RigMirror Radio Driver",
+  "schema_version": 1,
+  "metadata": {
+    "manufacturer": "Icom",
+    "model": "IC-7100",
+    "display_name": "Icom IC-7100",
+    "driver_revision": 1,
+    "release_channel": "CANDIDATE",
+    "notes": "v0.3.002 candidate. TEST DRIVER is optional and its result is local to the exact file."
+  },
+  "transport": {
+    "protocol": "icom_civ",
+    "default_baud": 19200,
+    "stop_bits": 1,
+    "timeout_seconds": 0.8,
+    "initialise_commands": [],
+    "shutdown_commands": [],
+    "civ_address": "88",
+    "controller_address": "E0"
+  },
+  "topology": {
+    "type": "selected_vfo",
+    "default_receiver": "MAIN"
+  },
+  "capabilities": {
+    "identify": {
+      "kind": "query",
+      "command": "1900",
+      "response_equals": "190088",
+      "extract": {
+        "type": "constant",
+        "value": "Icom IC-7100"
+      },
+      "label": "Identify"
+    },
+    "frequency_read": {
+      "kind": "query",
+      "command": "03",
+      "response_regex": "03(?P<value>[0-9A-F]{10})",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "decode": "bcd_le"
+      },
+      "label": "Frequency read"
+    },
+    "frequency_write": {
+      "kind": "set",
+      "command": "05{value}",
+      "input": {
+        "type": "bcd_le",
+        "bytes": 5
+      },
+      "label": "Frequency write"
+    },
+    "mode_read": {
+      "kind": "query",
+      "command": "04",
+      "response_regex": "04(?P<value>[0-9A-F]{2})(?:[0-9A-F]{2})?",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "00": "LSB",
+          "01": "USB",
+          "02": "AM",
+          "03": "CW",
+          "04": "FSK",
+          "05": "FM",
+          "07": "CW-R",
+          "08": "FSK-R"
+        }
+      },
+      "label": "Mode read"
+    },
+    "mode_write": {
+      "kind": "set",
+      "command": "06{value}",
+      "input": {
+        "type": "enum",
+        "map": {
+          "LSB": "00",
+          "USB": "01",
+          "AM": "02",
+          "CW": "03",
+          "FSK": "04",
+          "FM": "05",
+          "CW-R": "07",
+          "FSK-R": "08"
+        }
+      },
+      "label": "Mode write"
+    },
+    "tx_state": {
+      "kind": "query",
+      "command": "1C00",
+      "response_regex": "1C00(?P<value>0[01])",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "00": "RX",
+          "01": "TX"
+        }
+      },
+      "label": "Tx state"
+    }
+  },
+  "revision_history": [
+    {
+      "revision": 1,
+      "note": "Initial documentation-derived candidate profile."
+    }
+  ],
+  "sources": [
+    "Icom CI-V command reference: 19 00, frequency, mode, 1C 00 and routing commands."
+  ]
+}

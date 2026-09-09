@@ -1,0 +1,129 @@
+{
+  "format": "RigMirror Radio Driver",
+  "schema_version": 1,
+  "metadata": {
+    "manufacturer": "Yaesu",
+    "model": "FT-991A",
+    "display_name": "Yaesu FT-991A",
+    "driver_revision": 1,
+    "release_channel": "CANDIDATE",
+    "notes": "v0.3.002 candidate. TEST DRIVER is optional and its result is local to the exact file."
+  },
+  "transport": {
+    "protocol": "semicolon_ascii",
+    "default_baud": 38400,
+    "stop_bits": 1,
+    "timeout_seconds": 0.8,
+    "initialise_commands": [
+      "AI0;"
+    ],
+    "shutdown_commands": []
+  },
+  "topology": {
+    "type": "selected_vfo",
+    "default_receiver": "MAIN"
+  },
+  "capabilities": {
+    "identify": {
+      "kind": "query",
+      "command": "ID;",
+      "response_equals": "ID0670;",
+      "extract": {
+        "type": "constant",
+        "value": "Yaesu FT-991A"
+      },
+      "label": "Identify"
+    },
+    "frequency_read": {
+      "kind": "query",
+      "command": "FA;",
+      "response_regex": "FA(?P<value>\\d{9});",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "decode": "integer"
+      },
+      "label": "Frequency read"
+    },
+    "frequency_write": {
+      "kind": "set",
+      "command": "FA{value:09d};",
+      "input": {
+        "type": "integer",
+        "minimum": 30000,
+        "maximum": 60000000
+      },
+      "label": "Frequency write"
+    },
+    "mode_read": {
+      "kind": "query",
+      "command": "MD0;",
+      "response_regex": "MD0(?P<value>[0-9A-F]);",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "1": "LSB",
+          "2": "USB",
+          "3": "CW",
+          "4": "FM",
+          "5": "AM",
+          "6": "FSK",
+          "7": "CW-R",
+          "9": "FSK-R",
+          "8": "LSB",
+          "A": "FM",
+          "B": "FM",
+          "C": "USB",
+          "D": "AM",
+          "E": "USB",
+          "F": "FM"
+        }
+      },
+      "label": "Mode read"
+    },
+    "mode_write": {
+      "kind": "set",
+      "command": "MD0{value};",
+      "preserve_wire_value_from": "mode_read",
+      "input": {
+        "type": "enum",
+        "map": {
+          "LSB": "8",
+          "USB": "E",
+          "CW": "3",
+          "FM": "F",
+          "AM": "D",
+          "FSK": "6",
+          "CW-R": "7",
+          "FSK-R": "9"
+        }
+      },
+      "label": "Mode write"
+    },
+    "tx_state": {
+      "kind": "query",
+      "command": "TX;",
+      "response_regex": "TX(?P<value>[012]);",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "0": "RX",
+          "1": "TX",
+          "2": "TX"
+        }
+      },
+      "label": "Tx state"
+    }
+  },
+  "revision_history": [
+    {
+      "revision": 1,
+      "note": "Initial documentation-derived candidate profile."
+    }
+  ],
+  "sources": [
+    "Yaesu CAT operation reference: ID, FA/FB, MD, TX and AN commands."
+  ]
+}

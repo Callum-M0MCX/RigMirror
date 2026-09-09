@@ -1,0 +1,243 @@
+{
+  "format": "RigMirror Radio Driver",
+  "schema_version": 1,
+  "metadata": {
+    "manufacturer": "Kenwood",
+    "model": "TS-2000",
+    "display_name": "Kenwood TS-2000",
+    "driver_revision": 3,
+    "contributor_name": "Callum",
+    "contributor_callsign": "M0MCX",
+    "notes": "v0.3.002 candidate. TEST DRIVER is optional and its result is tied to this exact file.",
+    "release_channel": "CANDIDATE"
+  },
+  "topology": {
+    "type": "active_vfo"
+  },
+  "transport": {
+    "protocol": "semicolon_ascii",
+    "encoding": "ascii",
+    "terminator": ";",
+    "default_baud": 9600,
+    "supported_baud": [
+      9600,
+      19200,
+      38400,
+      57600
+    ],
+    "data_bits": 8,
+    "parity": "N",
+    "stop_bits": 1,
+    "timeout_seconds": 0.8,
+    "initialise_commands": [
+      "AI0;"
+    ],
+    "shutdown_commands": [
+      "AI0;"
+    ]
+  },
+  "capabilities": {
+    "identify": {
+      "label": "Identify radio",
+      "kind": "query",
+      "command": "ID;",
+      "response_equals": "ID019;",
+      "extract": {
+        "type": "constant",
+        "value": "Kenwood TS-2000"
+      }
+    },
+    "active_vfo": {
+      "label": "Read active VFO",
+      "kind": "query",
+      "command": "FR;",
+      "response_regex": "^FR(?P<value>[0-3]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "0": "VFO A",
+          "1": "VFO B",
+          "2": "MEMORY",
+          "3": "CALL"
+        }
+      }
+    },
+    "frequency_read": {
+      "label": "Read frequency",
+      "kind": "query",
+      "selector": "active_vfo",
+      "command_by_selector": {
+        "VFO A": "FA;",
+        "VFO B": "FB;"
+      },
+      "response_regex": "^F[AB](?P<value>\\d{11});$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "decode": "integer"
+      }
+    },
+    "frequency_write": {
+      "label": "Write frequency",
+      "kind": "set",
+      "selector": "active_vfo",
+      "command_by_selector": {
+        "VFO A": "FA{value:011d};",
+        "VFO B": "FB{value:011d};"
+      },
+      "input": {
+        "type": "integer",
+        "minimum": 30000,
+        "maximum": 60000000
+      },
+      "changes_radio": true
+    },
+    "mode_read": {
+      "label": "Read operating mode",
+      "kind": "query",
+      "command": "MD;",
+      "response_regex": "^MD(?P<value>[1-79]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "1": "LSB",
+          "2": "USB",
+          "3": "CW",
+          "4": "FM",
+          "5": "AM",
+          "6": "FSK",
+          "7": "CW-R",
+          "9": "FSK-R"
+        }
+      }
+    },
+    "mode_write": {
+      "label": "Write operating mode",
+      "kind": "set",
+      "command": "MD{value};",
+      "input": {
+        "type": "mapped_choice",
+        "map": {
+          "LSB": "1",
+          "USB": "2",
+          "CW": "3",
+          "FM": "4",
+          "AM": "5",
+          "FSK": "6",
+          "CW-R": "7",
+          "FSK-R": "9"
+        }
+      },
+      "changes_radio": true
+    },
+    "tx_state": {
+      "label": "Read RX/TX state",
+      "kind": "query",
+      "command": "IF;",
+      "response_regex": "^IF.{26}[01].*;$",
+      "extract": {
+        "type": "character",
+        "index": 28,
+        "map": {
+          "0": "RX",
+          "1": "TX"
+        }
+      }
+    },
+    "antenna_read": {
+      "label": "Read antenna state",
+      "kind": "query",
+      "command": "AN;",
+      "response_regex": "^AN(?P<value>[01]);$",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "0": "100",
+          "1": "200"
+        }
+      }
+    },
+    "antenna_select": {
+      "label": "Select receive source",
+      "kind": "choice_set",
+      "choices": {
+        "ANT1": [
+          "AN0;"
+        ],
+        "ANT2": [
+          "AN1;"
+        ]
+      },
+      "changes_radio": true
+    },
+    "transmit_vfo": {
+      "kind": "query",
+      "command": "FT;",
+      "response_regex": "FT(?P<value>[01]);",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "map": {
+          "0": "VFO A",
+          "1": "VFO B"
+        }
+      },
+      "label": "Transmit vfo"
+    },
+    "tx_frequency_read": {
+      "kind": "query",
+      "selector": "transmit_vfo",
+      "command_by_selector": {
+        "VFO A": "FA;",
+        "VFO B": "FB;"
+      },
+      "response_regex": "F[AB](?P<value>\\d{11});",
+      "extract": {
+        "type": "regex_group",
+        "group": "value",
+        "decode": "integer"
+      },
+      "label": "Tx frequency read"
+    },
+    "tx_frequency_write": {
+      "kind": "set",
+      "selector": "transmit_vfo",
+      "command_by_selector": {
+        "VFO A": "FA{value:011d};",
+        "VFO B": "FB{value:011d};"
+      },
+      "input": {
+        "type": "integer",
+        "minimum": 30000,
+        "maximum": 60000000
+      },
+      "label": "Tx frequency write"
+    },
+    "transmit_vfo_write": {
+      "kind": "set",
+      "command": "FT{value};",
+      "input": {
+        "type": "mapped_choice",
+        "map": {
+          "VFO A": "0",
+          "VFO B": "1"
+        }
+      },
+      "label": "Transmit vfo write"
+    }
+  },
+  "revision_history": [
+    {
+      "revision": 1,
+      "contributor": "Callum M0MCX",
+      "note": "Initial TS-2000 outboard conversion."
+    },
+    {
+      "revision": 3,
+      "note": "v0.3.002: physical 6 m range and pre-PTT M transmit-VFO preparation."
+    }
+  ]
+}
