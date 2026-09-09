@@ -1,0 +1,75 @@
+ABOUT RIGMIRROR
+
+Hey folks, Callum here.
+
+I originally made RigMirror because I really enjoy listening to two receivers at the same time—VFO A on one antenna in my left ear and VFO B on another antenna in my right. I call this “Stereo Monitoring”.
+
+The difficulty comes when a caller is slightly off frequency. Conventional RIT normally adjusts only one receiver, so there is no convenient way to tune both sides of my stereo monitoring together while keeping my transmit frequency exactly where it was.
+
+That is what the M button is for.
+
+Choose your working frequency and click M to memorise it. You can then tune the Master VFO slightly up or down to make an off-frequency caller sound right. When you transmit, RigMirror automatically returns your transmitted signal to the memorised M frequency. When you return to receive, you continue listening on the slightly adjusted frequency.
+
+The idea then grew legs.
+
+I thought it would be fun to let more people experience dual-receiver operation. You may not own a TS-990S, FTDX101MP, IC-7610 or another twin-receiver radio—but you might own two separate HF radios: perhaps a modern everyday radio and an older backup rig that rarely gets switched on.
+
+RigMirror can work with either:
+
+* Two receivers inside a supported dual-receiver radio; or
+* Two completely separate HF radios.
+
+The second radio follows the frequency and mode of the Master, effectively becoming your additional receiver. It can also use a completely different antenna. Even a simple Loop on Ground or other receive antenna can produce a fascinating stereo effect.
+
+Naturally, you will need to arrange your audio so that the Master radio is heard in one ear and the Sub radio in the other. A simple stereo headphone lead or small mixer can usually achieve this.
+
+SPLIT OPERATION
+
+Mike, M0MSN, also asked me to include Split functionality.
+
+Clicking Split holds the Sub radio on the DX station while moving the Master 5 kHz up. You can then listen to the DX station on the Sub while using the Master to find and monitor the stations calling in the pile-up. Your transmission takes place on the Master’s higher frequency.
+
+It makes working a pile-up much more intuitive because you can hear both sides at once.
+
+PROTECTING THE SUB RADIO
+
+Please think carefully about protecting the Sub radio when transmitting.
+
+Ideally, use a proper PTT-controlled relay, antenna disconnect or muting arrangement so that excessive transmitted RF cannot reach its receiver. Software-controlled CAT switching should never be treated as guaranteed RF protection.
+
+To assist, RigMirror provides three choices:
+
+* No Change
+* Move the Sub temporarily to a Parking Frequency
+* Switch the Sub to another antenna socket or RX input, where the radio supports it
+
+When you return to receive, RigMirror restores the Sub to its previous frequency or antenna arrangement.
+
+The Parking Frequency and antenna-switching features are useful additional measures, but they are not substitutes for proper physical RF protection.
+
+GETTING STARTED
+
+Open CONFIG, load the correct driver for each radio, choose the relevant COM ports and baud rates, and connect.
+
+TEST DRIVER is optional, but it is particularly useful when trying one of the candidate drivers on a radio we have not yet tested physically.
+
+If a driver test fails, RigMirror creates a fault report containing the driver details and relevant CAT traffic. The program will tell you where that report has been saved.
+
+Please upload the fault report here:
+
+https://mega.nz/filerequest/kZw_6fErFnM
+
+Let me know when you have uploaded it, together with the radio model you were testing and a brief description of what happened. I can then investigate and, hopefully, send you a fresh or corrected driver file.
+
+The whole essence of RigMirror is to let you roll out that older backup HF radio, give it some airtime of its own and experience Stereo Monitoring as I do.
+
+Two tricks you might not discover: You can mouse-wheel the Master frequency to effectively spin the VFO according to the radio button speeds shown - and right clicking the Master changes the colour scheme!
+
+And yes, all your settings will be saved.
+
+That’s it. Have fun!
+
+73,
+
+Callum, M0MCX
+DX Commander

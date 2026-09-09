@@ -1,14 +1,23 @@
-RigMirror v0.3.002
+RigMirror v0.3.003
 ==================
 
 HF-ONLY MULTI-MANUFACTURER CANDIDATE
 
-Keep your working v0.3.001 folder. Extract this ZIP into a new folder.
+Keep your working v0.3.002 folder. Extract this ZIP into a new folder.
+
+v0.3.003 corrective change
+--------------------------
+
+When the live TX action changes from PARKING FREQUENCY or NO CHANGE to
+SWITCH ANTENNA / RX PORT while Mirror is already running, RigMirror now
+captures the Sub's normal receive path before the next transmission. On RX it
+can therefore restore that exact path. Diversion is refused if no restoration
+snapshot exists, preventing a Sub from being stranded on the diversion input.
 
 Important operating boundary
 ----------------------------
 
-RigMirror v0.3.002 mirrors only 30 kHz through 30.000 MHz. A Master above
+RigMirror v0.3.003 mirrors only 30 kHz through 30.000 MHz. A Master above
 30 MHz remains connected and displays its real frequency, but Sub tuning,
 M and Split pause. The Sub readout turns grey, shows the requested Master
 frequency and a red warning dot. Mirroring resumes automatically below

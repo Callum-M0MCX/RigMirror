@@ -47,7 +47,7 @@ def write_test_report(
         "created_local": timestamp.isoformat(),
         "created_utc": timestamp.astimezone(timezone.utc).isoformat(),
         "cat_traffic_time_basis": "local time with numeric UTC offset",
-        "rigmirror_version": "0.3.001",
+        "rigmirror_version": "0.3.003",
         "category": category,
         "endpoint": endpoint,
         "outcome": outcome.upper(),

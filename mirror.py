@@ -327,6 +327,10 @@ class MirrorCoordinator:
         # The routing write is deliberately the first Sub CAT operation after
         # Master TX is observed.  The RX state was captured when Mirror began;
         # no Sub TX query or pre-change antenna query delays the diversion.
+        if self._listener_normal_state is None:
+            raise CATError(
+                "Sub antenna state was not captured before TX; diversion was not attempted."
+            )
         target.set_receive_source(self.tx_source)
         confirmed = target.read_antenna_state()
         if confirmed.active_source != self.tx_source:
@@ -459,6 +463,13 @@ class MirrorCoordinator:
                             self._activate_listener_route(target)
                         elif not active and self._was_active:
                             self._deactivate_listener_route(target)
+                        elif active and routing_changed and not self._transmitting:
+                            # Switching from Parking/No Change to antenna
+                            # diversion while Mirror is already running must
+                            # capture the Sub's present receive path.  Without
+                            # this snapshot TX can divert the Sub but RX has no
+                            # state to restore.
+                            self._activate_listener_route(target)
                     except Exception as exc:
                         self._routing_failed(target, "starting or stopping Mirror", exc)
                         self._wake.wait(self.poll_interval)

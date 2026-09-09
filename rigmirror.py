@@ -1,13 +1,15 @@
-"""RigMirror v0.3.002 - M/VFO and optional driver-test hotfix."""
+"""RigMirror v0.3.003 - live antenna-routing restoration hotfix."""
 
 from __future__ import annotations
 
 import json
 from collections import deque
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 import queue
 import re
+import sys
 import threading
 import time
 import tkinter as tk
@@ -46,7 +48,7 @@ from radio import (
 )
 
 
-APP_TITLE = "RigMirror v0.3.002"
+APP_TITLE = "RigMirror v0.3.003"
 SPLIT_OFFSET_HZ = 5_000
 MIRROR_FREQUENCY_CEILING_HZ = 30_000_000
 DEFAULT_LAYOUT = "two"
@@ -106,6 +108,22 @@ DISPLAY_SCHEME_LABELS = {
 }
 DISPLAY_SCHEME_NAMES = {value: key for key, value in DISPLAY_SCHEME_LABELS.items()}
 
+
+def application_directory() -> Path:
+    """Return the folder containing RigMirror.exe, or the source files."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def user_data_directory() -> Path:
+    """Return a per-user, writable folder for settings and reports."""
+    if sys.platform == "win32":
+        root = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA")
+        if root:
+            return Path(root) / "RigMirror"
+    return Path.home() / ".config" / "RigMirror"
+
 # These are the Kenwood antenna-memory frequency regions.  They give M a
 # radio-independent way to recognise a real band change without mistaking a
 # normal RIT-sized dial movement for one.
@@ -137,7 +155,10 @@ class RigMirrorApp(tk.Tk):
         self.minsize(800, 400)
         self.configure(bg=BG)
 
-        self._config_path = Path(__file__).with_name("rigmirror_config.json")
+        self._application_dir = application_directory()
+        self._data_dir = user_data_directory()
+        self._data_dir.mkdir(parents=True, exist_ok=True)
+        self._config_path = self._data_dir / "rigmirror_config.json"
         self._busy = [False, False]
         self._connected = [False, False]
         self._failed = [False, False]
@@ -258,7 +279,7 @@ class RigMirrorApp(tk.Tk):
         header.pack(fill="x", pady=(0, 8))
         self.header_frame = header
         ttk.Label(header, text="RigMirror", style="Title.TLabel").pack(side="left")
-        ttk.Label(header, text="v0.3.002", style="Muted.TLabel").pack(side="left", padx=10, pady=(6, 0))
+        ttk.Label(header, text="v0.3.003", style="Muted.TLabel").pack(side="left", padx=10, pady=(6, 0))
         actions = ttk.Frame(header, style="App.TFrame")
         actions.pack(side="right")
         ttk.Button(actions, text="MICRO", command=lambda: self._set_skin("micro")).pack(side="left", padx=(0, 5))
@@ -723,7 +744,7 @@ class RigMirrorApp(tk.Tk):
         filename = filedialog.askopenfilename(
             parent=self,
             title="Load Master Radio" if index == 0 else "Load Sub / Slave Radio",
-            initialdir=Path(__file__).with_name("drivers"),
+            initialdir=self._application_dir / "drivers",
             filetypes=(("RigMirror radio drivers", "*.rmradio"), ("All files", "*.*")),
         )
         if not filename:
@@ -932,7 +953,7 @@ class RigMirrorApp(tk.Tk):
     def _write_failure_report(self, index: int, category: str, detail: str) -> Optional[Path]:
         try:
             return write_test_report(
-                Path(__file__).resolve().parent,
+                self._data_dir,
                 category=category,
                 endpoint="MASTER" if index == 0 else "SUB / SLAVE",
                 port=self.port_vars[index].get().strip(),
@@ -957,7 +978,7 @@ class RigMirrorApp(tk.Tk):
     def _stored_driver_path(self, path: Optional[Path]) -> str:
         if path is None:
             return ""
-        base = Path(__file__).resolve().parent
+        base = self._application_dir
         try:
             return str(path.resolve().relative_to(base))
         except ValueError:
@@ -968,7 +989,7 @@ class RigMirrorApp(tk.Tk):
             return None
         path = Path(stored)
         if not path.is_absolute():
-            path = Path(__file__).resolve().parent / path
+            path = self._application_dir / path
         return path.resolve()
 
     def _refresh_ports(self) -> None:

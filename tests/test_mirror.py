@@ -410,6 +410,43 @@ class MirrorTests(unittest.TestCase):
             coordinator.stop()
         self.assertEqual(route_states[:3], [(False, "ANT1"), (True, "ANT2"), (False, "ANT1")])
 
+    def test_live_change_from_parking_to_antenna_switch_captures_restore_state(self):
+        master = FakeEndpoint(7_151_000, tx_state=False)
+        listener = FakeEndpoint(7_151_000)
+        coordinator = MirrorCoordinator(
+            (master, listener), lambda *_: None, self.fail,
+            poll_interval=0.005, tx_action="PARKING FREQUENCY",
+            parking_frequency=10_100_000,
+        )
+        coordinator.set_active(True)
+        coordinator.start_monitoring()
+        try:
+            self.assertTrue(self._wait_for(lambda: coordinator.running))
+            self.assertIsNone(coordinator._listener_normal_state)
+            coordinator.set_routing("SWITCH ANTENNA / RX PORT", "RX ANT")
+            self.assertTrue(self._wait_for(lambda: coordinator._listener_normal_state is not None))
+            self.assertEqual(coordinator._listener_normal_state.active_source, "ANT1")
+            master.tx_state = True
+            self.assertTrue(self._wait_for(
+                lambda: listener.antenna_state.active_source == "RX ANT"
+            ))
+            master.tx_state = False
+            self.assertTrue(self._wait_for(
+                lambda: listener.antenna_state.active_source == "ANT1"
+            ))
+        finally:
+            coordinator.stop()
+
+    def test_diversion_is_refused_without_a_restore_snapshot(self):
+        listener = FakeEndpoint(7_151_000)
+        coordinator = MirrorCoordinator(
+            (FakeEndpoint(7_151_000), listener), lambda *_: None, self.fail,
+            tx_action="SWITCH ANTENNA / RX PORT", tx_source="RX ANT",
+        )
+        with self.assertRaisesRegex(Exception, "not captured"):
+            coordinator._divert_listener(listener)
+        self.assertEqual(listener.antenna_writes, [])
+
     def test_listener_uses_start_snapshot_without_a_pre_tx_query(self):
         master = FakeEndpoint(7_151_000, tx_state=False)
         listener = FakeEndpoint(7_151_000)
