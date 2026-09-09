@@ -31,4 +31,4 @@ FTDX3000
 FT-2000/D
 FT-950
 
-Error / Fault reports created automatically iside director \reports. Send them to me. Callum, M0MCX.
+Error / Fault reports created automatically inside a director called \reports. Send them to me. Callum, M0MCX.
