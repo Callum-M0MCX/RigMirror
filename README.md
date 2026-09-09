@@ -31,4 +31,10 @@ FTDX3000
 FT-2000/D
 FT-950
 
+Install 64-bit Python 3.10 or newer—I recommend Python 3.12.
+During installation, tick Add Python to PATH.
+Extract the RigMirror ZIP.
+Run INSTALL_REQUIREMENTS.bat once—it installs pyserial.
+Run RUN_RIGMIRROR.bat to start the program.
+
 Error / Fault reports created automatically inside a director called \reports. Send them to me. Callum, M0MCX.
